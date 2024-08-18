@@ -1,7 +1,25 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "compilerOptions": {
+    "module": "es2020",
+    "composite": true,
+    // "types": ["unplugin-element-plus/types"],
+    "moduleResolution": "node",
+    "baseUrl": "./", // 基础目录
+    "paths": {
+      "@/*": ["src/*"], // 将 @ 别名指向 src 目录下的文件
+      "components/*": ["src/components/*"],
+      "views/*": ["src/views/*"],
+      // 其他别名...
+    },
+    "esModuleInterop": true, //设置TypeScript 能够自动解析没有扩展名的导入
+    "allowSyntheticDefaultImports": true, //设置TypeScript 能够自动解析没有扩展名的导入
+    "plugins": [
+      {
+        "transform": "unplugin-element-plus/typescript"
+      }
+    ]
+  },
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"],
+  "exclude": ["node_modules"]
 }

@@ -1,0 +1,22 @@
+{
+    "root": true,
+    "extends": [
+      "eslint:recommended",
+      "plugin:vue/recommended",
+      "prettier"
+    ],
+    "plugins": [
+      "prettier"
+    ],
+    "rules": {
+      "prettier/prettier": [
+        "error",
+        {
+          "endOfLine": "auto"
+        }
+      ]
+    },
+    "env": {
+      "node": true
+    }
+  }
