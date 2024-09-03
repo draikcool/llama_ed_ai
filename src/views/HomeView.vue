@@ -1,22 +1,165 @@
 <template>
-  <div>
-    <main class="main">
-      <div class="div_flex">
-        <div class="div_h">
-          <div ref="chat" class="scroll">
-            <div class="div_center">
-              <div class="chat_list">
-                <div></div>
-                <template v-for="(v, key) in session">
-                  <div
-                    v-if="v.anwser"
-                    class="anwser"
-                    style="padding-bottom: 6px; padding-left: 82px; padding-right: 82px"
-                  >
-                    <div class="chat_item">
-                      <div class="headimg headimg_item">
-                        <img :src="assistant_img" alt="头像" />
+  <div class="root_content">
+    <div class="main_content">
+      <main class="main">
+        <div class="div_flex">
+          <div class="div_h">
+            <div ref="chat" class="scroll">
+              <div class="div_center">
+                <div class="chat_list">
+                  <div></div>
+                  <template v-for="(v, key) in session">
+                    <div
+                      v-if="v.anwser"
+                      class="anwser"
+                      style="
+                        padding-bottom: 6px;
+                        padding-left: 82px;
+                        padding-right: 82px;
+                      "
+                    >
+                      <div class="chat_item">
+                        <div class="headimg headimg_item">
+                          <img :src="assistant_img" alt="头像" />
+                        </div>
+                        <div class="anwser_box">
+                          <div class="anwser_box_item">
+                            <div class="anwser_info">
+                              <div>
+                                <div>
+                                  <div></div>
+                                  <div>
+                                    <div
+                                      v-if="key == 0"
+                                      v-html="markdown(v.anwser)"
+                                      :class="{ 'result-streaming': creating }"
+                                      class="markdown anwser_input"
+                                    ></div>
+                                    <div
+                                      v-else
+                                      v-html="markdown(v.anwser)"
+                                      class="markdown anwser_input"
+                                    ></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="chat_rate">
+                            <el-rate
+                              v-if="!creating && key != session.length - 1"
+                              v-model="v.rate"
+                              show-text
+                              @change="chatRate(v.rate, v.id)"
+                            ></el-rate>
+                            <div class="anwser_bot">
+                              <div class="anwser_bot_item">
+                                <span class="anwser_copy">
+                                  <el-tooltip
+                                    class="item"
+                                    effect="dark"
+                                    content="复制"
+                                    placement="bottom"
+                                  >
+                                    <i
+                                      v-if="!creating && key != session.length - 1"
+                                      class="el-icon-document-copy"
+                                      @click="copy(v.anwser)"
+                                    ></i>
+                                  </el-tooltip>
+                                  <i
+                                    v-if="creating && key == 0"
+                                    class="el-icon-loading"
+                                  ></i>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+                    </div>
+                    <div
+                      v-if="v.question"
+                      class="anwser"
+                      style="
+                        padding-bottom: 6px;
+                        padding-left: 82px;
+                        padding-right: 82px;
+                      "
+                    >
+                      <div class="chat_item">
+                        <div class="headimg">
+                          <img :src="userInfo.head_img" alt="头像" />
+                        </div>
+                        <div class="question_div">
+                          <div class="question_info">
+                            <span>{{ v.question }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <el-drawer
+                  title=""
+                  v-model="drawer"
+                  :with-header="false"
+                  direction="ltr"
+                  size="50%"
+                >
+                  <div
+                    class="welcome_window"
+                    style="margin-left: 20px; margin-top: 20px"
+                  >
+                    <div
+                      v-for="(cate, cateIndex) in assistantList"
+                      class="welcome_list"
+                    >
+                      <div class="welcome_content">
+                        <div class="welcome_title">
+                          <div class="welcome_label">{{ cate.label }}</div>
+                        </div>
+                        <div class="welcome_card">
+                          <div
+                            v-for="(assistant, assistantIndex) in cate.children"
+                            class="welcome_card_item"
+                            style="display: flex; margin-right: 10px"
+                            @click="assistantClick(assistant.id)"
+                          >
+                            <el-image
+                              style="width: 50px; height: 50px; float: left"
+                              :src="assistant.icon"
+                              fit="cover"
+                            ></el-image>
+                            <div style="float: left; margin-left: 30px">
+                              <div class="welcome_item_title">
+                                <div class="welcome_item_label">
+                                  {{ assistant.label }}
+                                </div>
+                              </div>
+                              <div class="welcome_item_desc">
+                                {{ assistant.desc }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="welcome_empty"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </el-drawer>
+
+                <div v-if="session.length == 0" class="welcome_window">
+                  <div
+                    class="anwser"
+                    style="
+                      padding-bottom: 6px;
+                      padding-right: 82px;
+                      margin-bottom: 30px;
+                    "
+                  >
+                    <div class="chat_item" style="max-width: 950px">
                       <div class="anwser_box">
                         <div class="anwser_box_item">
                           <div class="anwser_info">
@@ -25,14 +168,7 @@
                                 <div></div>
                                 <div>
                                   <div
-                                    v-if="key == 0"
-                                    v-html="markdown(v.anwser)"
-                                    :class="{ 'result-streaming': creating }"
-                                    class="markdown anwser_input"
-                                  ></div>
-                                  <div
-                                    v-else
-                                    v-html="markdown(v.anwser)"
+                                    v-html="welcome"
                                     class="markdown anwser_input"
                                   ></div>
                                 </div>
@@ -40,66 +176,10 @@
                             </div>
                           </div>
                         </div>
-                        <div class="chat_rate">
-                          <el-rate
-                            v-if="!creating && key != session.length - 1"
-                            v-model="v.rate"
-                            show-text
-                            @change="chatRate(v.rate, v.id)"
-                          ></el-rate>
-                          <div class="anwser_bot">
-                            <div class="anwser_bot_item">
-                              <span class="anwser_copy">
-                                <el-tooltip
-                                  class="item"
-                                  effect="dark"
-                                  content="复制"
-                                  placement="bottom"
-                                >
-                                  <i
-                                    v-if="!creating && key != session.length - 1"
-                                    class="el-icon-document-copy"
-                                    @click="copy(v.anwser)"
-                                  ></i>
-                                </el-tooltip>
-                                <i
-                                  v-if="creating && key == 0"
-                                  class="el-icon-loading"
-                                ></i>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
-                  <div
-                    v-if="v.question"
-                    class="anwser"
-                    style="padding-bottom: 6px; padding-left: 82px; padding-right: 82px"
-                  >
-                    <div class="chat_item">
-                      <div class="headimg">
-                        <img :src="userInfo.head_img" alt="头像" />
-                      </div>
-                      <div class="question_div">
-                        <div class="question_info">
-                          <span>{{ v.question }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </div>
 
-              <el-drawer
-                title=""
-                v-model="drawer"
-                :with-header="false"
-                direction="ltr"
-                size="50%"
-              >
-                <div class="welcome_window" style="margin-left: 20px; margin-top: 20px">
                   <div v-for="(cate, cateIndex) in assistantList" class="welcome_list">
                     <div class="welcome_content">
                       <div class="welcome_title">
@@ -133,310 +213,271 @@
                     </div>
                   </div>
                 </div>
-              </el-drawer>
+                <div class="anwser_foot"></div>
+              </div>
 
-              <div v-if="session.length == 0" class="welcome_window">
+              <transition name="el-fade-in-linear">
                 <div
-                  class="anwser"
-                  style="padding-bottom: 6px; padding-right: 82px; margin-bottom: 30px"
+                  v-show="isShowBottom"
+                  @click="handleScrollBottom"
+                  class="handle_bottom"
                 >
-                  <div class="chat_item" style="max-width: 950px">
-                    <div class="anwser_box">
-                      <div class="anwser_box_item">
-                        <div class="anwser_info">
-                          <div>
-                            <div>
-                              <div></div>
-                              <div>
-                                <div
-                                  v-html="welcome"
-                                  class="markdown anwser_input"
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <i style="margin: auto" class="el-icon-bottom"></i>
                 </div>
-
-                <div v-for="(cate, cateIndex) in assistantList" class="welcome_list">
-                  <div class="welcome_content">
-                    <div class="welcome_title">
-                      <div class="welcome_label">{{ cate.label }}</div>
-                    </div>
-                    <div class="welcome_card">
-                      <div
-                        v-for="(assistant, assistantIndex) in cate.children"
-                        class="welcome_card_item"
-                        style="display: flex; margin-right: 10px"
-                        @click="assistantClick(assistant.id)"
-                      >
-                        <el-image
-                          style="width: 50px; height: 50px; float: left"
-                          :src="assistant.icon"
-                          fit="cover"
-                        ></el-image>
-                        <div style="float: left; margin-left: 30px">
-                          <div class="welcome_item_title">
-                            <div class="welcome_item_label">
-                              {{ assistant.label }}
-                            </div>
-                          </div>
-                          <div class="welcome_item_desc">
-                            {{ assistant.desc }}
-                          </div>
-                        </div>
-                      </div>
-                      <div class="welcome_empty"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="anwser_foot"></div>
+              </transition>
             </div>
-
-            <transition name="el-fade-in-linear">
-              <div
-                v-show="isShowBottom"
-                @click="handleScrollBottom"
-                class="handle_bottom"
-              >
-                <i style="margin: auto" class="el-icon-bottom"></i>
-              </div>
-            </transition>
           </div>
         </div>
-      </div>
 
-      <div>
-        <form v-if="session.length > 0" class="session_form">
-          <div class="session_input_list">
-            <div class="session_stop">
-              <el-button
-                style="background-color: #4c75f6"
-                @click="stop"
-                v-if="creating && stream == 2"
-                type="primary"
-                icon="el-icon-video-pause"
-              >
-                <el-icon>
-                  <VideoPause />
-                </el-icon>
-                停止输出
-              </el-button>
-            </div>
-            <div v-for="(input, key) in inputItem">
-              <div
-                v-if="input.type == 'input'"
-                style="width: 60%; float: left; margin: 0 2% 10px 0; display: flex"
-                class="session_input"
-              >
-                <div class="session_input_title">
-                  <p>{{ input.title }}</p>
+        <div>
+          <form v-if="session.length > 0" class="session_form">
+            <div class="session_input_list">
+              <div class="session_stop">
+                <el-button
+                  style="background-color: #4c75f6"
+                  @click="stop"
+                  v-if="creating && stream == 2"
+                  type="primary"
+                  icon="el-icon-video-pause"
+                >
+                  <el-icon>
+                    <VideoPause />
+                  </el-icon>
+                  停止输出
+                </el-button>
+              </div>
+              <div v-for="(input, key) in inputItem">
+                <div
+                  v-if="input.type == 'input'"
+                  style="width: 60%; float: left; margin: 0 2% 10px 0; display: flex"
+                  class="session_input"
+                >
+                  <div class="session_input_title">
+                    <p>{{ input.title }}</p>
+                  </div>
+                  <div style="flex: 1">
+                    <el-input
+                      type="textarea"
+                      :placeholder="input.default"
+                      v-model="input.val"
+                      :show-word-limit="true"
+                      rows="1"
+                      :maxlength="20"
+                      :disabled="creating"
+                      @keydown.enter.native.prevent=""
+                    ></el-input>
+                  </div>
                 </div>
-                <div style="flex: 1">
-                  <el-input
-                    type="textarea"
-                    :placeholder="input.default"
-                    v-model="input.val"
-                    :show-word-limit="true"
-                    rows="1"
-                    :maxlength="20"
-                    :disabled="creating"
-                    @keydown.enter.native.prevent=""
-                  ></el-input>
+                <div
+                  v-if="input.type == 'slider'"
+                  style="width: 36%; float: left; margin: 0 2% 10px 0; display: flex"
+                  class="session_input"
+                >
+                  <div class="session_input_title">
+                    <p>{{ input.title }}</p>
+                  </div>
+                  <div style="flex: 1">
+                    <el-input
+                      type="textarea"
+                      :placeholder="input.default"
+                      v-model.number="input.val"
+                      rows="1"
+                      :disabled="creating"
+                      @keydown.enter.native.prevent=""
+                      @input="inputNum(inputItem, key)"
+                    ></el-input>
+                  </div>
                 </div>
               </div>
-              <div
-                v-if="input.type == 'slider'"
-                style="width: 36%; float: left; margin: 0 2% 10px 0; display: flex"
-                class="session_input"
-              >
-                <div class="session_input_title">
-                  <p>{{ input.title }}</p>
-                </div>
-                <div style="flex: 1">
-                  <el-input
-                    type="textarea"
-                    :placeholder="input.default"
-                    v-model.number="input.val"
-                    rows="1"
-                    :disabled="creating"
-                    @keydown.enter.native.prevent=""
-                    @input="inputNum(inputItem, key)"
-                  ></el-input>
-                </div>
-              </div>
-            </div>
 
-            <div v-for="(input, key) in inputItem">
-              <div
-                v-if="input.type == 'textarea'"
-                class="session_input"
-                style="display: flex"
-              >
-                <div class="session_input_title">
-                  <p>{{ input.title }}</p>
-                </div>
-                <div style="flex: 0.95">
-                  <el-input
-                    type="textarea"
-                    :placeholder="input.default"
-                    v-model="input.val"
-                    :show-word-limit="true"
-                    :autosize="{ minRows: 2, maxRows: 10 }"
-                    rows="2"
-                    :maxlength="400"
-                    @keydown.enter.native.prevent="inputEnter"
-                    :disabled="creating"
-                    @input="inputChangeEnter(inputItem, key)"
-                  ></el-input>
-                </div>
-                <div class="session_send">
-                  <el-button
-                    type="primary"
-                    style="background-color: #4c75f6"
-                    @click.stop.prevent="send"
-                    size="mini"
-                    :disabled="creating"
-                    :loading="creating"
-                    icon="el-icon-s-promotion"
-                    circle
-                  ></el-button>
+              <div v-for="(input, key) in inputItem">
+                <div
+                  v-if="input.type == 'textarea'"
+                  class="session_input"
+                  style="display: flex"
+                >
+                  <div class="session_input_title">
+                    <p>{{ input.title }}</p>
+                  </div>
+                  <div style="flex: 0.95">
+                    <el-input
+                      type="textarea"
+                      :placeholder="input.default"
+                      v-model="input.val"
+                      :show-word-limit="true"
+                      :autosize="{ minRows: 2, maxRows: 10 }"
+                      rows="2"
+                      :maxlength="400"
+                      @keydown.enter.native.prevent="inputEnter"
+                      :disabled="creating"
+                      @input="inputChangeEnter(inputItem, key)"
+                    ></el-input>
+                  </div>
+                  <div class="session_send">
+                    <el-button
+                      type="primary"
+                      style="background-color: #4c75f6"
+                      @click.stop.prevent="send"
+                      size="mini"
+                      :disabled="creating"
+                      :loading="creating"
+                      icon="el-icon-s-promotion"
+                      circle
+                    ></el-button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </form>
-        <div class="footer_info">
-          <span v-if="session.length > 0" style="color: black; font-size: 15px"
-            >流式输出
-            <span style="margin-left: 10px">
-              <el-switch
-                v-model="streamDefault"
-                active-color="#4c75f6"
-                inactive-color="#ff4949"
-                @change="streamChange"
-                :disabled="creating"
-              ></el-switch>
+          </form>
+          <div class="footer_info">
+            <span v-if="session.length > 0" style="color: black; font-size: 15px"
+              >流式输出
+              <span style="margin-left: 10px">
+                <el-switch
+                  v-model="streamDefault"
+                  active-color="#4c75f6"
+                  inactive-color="#ff4949"
+                  @change="streamChange"
+                  :disabled="creating"
+                ></el-switch>
+              </span>
             </span>
-          </span>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
 
-    <div class="menu">
-      <div class="menu_list">
-        <div class="scrollbar-trigger menu_info">
-          <nav class="menu_nav">
-            <el-button
-              style="background-color: #4c75f6; margin-bottom: 40px; margin-top: 10px"
-              @click="drawer = true"
-              type="info"
-              icon="el-icon-plus"
-              >新建对话
-            </el-button>
-
-            <div class="menu_session_list" style="padding-bottom: 5px">
-              <div class="menu_sessions">
-                <template v-for="(session, key) in sessions">
-                  <div v-if="session.editing" class="session_edit_list">
-                    <i class="el-icon-chat-square"></i>
-                    <input
-                      id="sessionTitle"
-                      v-model="sessionNameEdit"
-                      @blur="cancelEditSession(key, session)"
-                      type="text"
-                      class="session_edit_input"
-                      autofocus="true"
-                    />
-                    <div class="edit_options">
-                      <button
-                        @click="saveEditSession(key, session)"
-                        class="edit_button"
-                      >
-                        <i class="el-icon-check"></i>
-                      </button>
-                      <button
-                        @click="cancelEditSession(key, session)"
-                        class="edit_button"
-                      >
-                        <i class="el-icon-close"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  <a
-                    v-else
-                    @click.stop.prevent="selectSession(session)"
-                    :class="{
-                      session_selected: session.selected,
-                      session_unselected: !session.selected
-                    }"
-                    class="session_box"
-                  >
-                    <i class="el-icon-chat-dot-square"></i>
-                    <div style="margin-left: 5px" class="session_name">
-                      {{ session.name }}
-                    </div>
-                    <div v-show="session.selected" class="edit_options">
-                      <button @click="editSession(key, session)" class="edit_button">
-                        <i class="el-icon-edit-outline"></i>
-                      </button>
-                      <button
-                        @click.stop.prevent="deleteSessionById(key, session.id)"
-                        class="edit_button"
-                      >
-                        <i slot="reference" class="el-icon-delete"></i>
-                      </button>
-                    </div>
-                  </a>
-                </template>
-              </div>
-            </div>
-
-            <div
-              v-if="sessions.length > 0"
-              @click.stop.prevent="deleteSessions()"
-              class="sessions_option"
-            >
-              <i class="el-icon-delete-solid" style="margin-right: 5px"></i>
-              清除所有对话
-            </div>
-
-            <div v-if="userInfo.nickname" class="sessions_option">
-              <span style="width: 70px">剩余次数</span>
-              <span style="width: 50px; margin-left: 5px">{{ userNums.nums }}</span>
+      <div class="menu">
+        <div class="menu_list">
+          <div class="scrollbar-trigger menu_info">
+            <nav class="menu_nav">
               <el-button
-                v-if="userNums.show_vip > 0"
-                @click="showAddMsg(1)"
-                style="background-color: #4c75f6"
-                type="primary"
-                >获取更多
+                style="
+                  background-color: #4c75f6;
+                  margin-bottom: 40px;
+                  margin-top: 10px;
+                  margin-left: 10px;
+                  margin-right: 10px;
+                  width: 80%;
+                "
+                @click="drawer = true"
+                type="info"
+              >
+                <el-icon><Plus /></el-icon
+                ><span style="vertical-align: middle"> 新建对话 </span>
               </el-button>
-            </div>
 
-            <div v-if="userInfo.nickname" class="sessions_option">
-              <el-avatar
-                style="width: 30px; height: 30px"
-                :src="userInfo.head_img"
-              ></el-avatar>
-              <span style="width: 90px; margin-left: 5px">{{ userInfo.nickname }}</span>
-              <el-button
-                @click="loginout"
-                style="background-color: #4c75f6"
-                type="primary"
-                >退出登录</el-button
+              <div
+                class="menu_session_list"
+                style="padding-bottom: 5px; margin-left: 10px; margin-right: 10px"
               >
-            </div>
-            <div v-else class="sessions_option">
-              <el-button @click="login" style="background-color: #4c75f6" type="info"
-                >登录</el-button
+                <div class="menu_sessions">
+                  <template v-for="(session, key) in sessions">
+                    <div v-if="session.editing" class="session_edit_list">
+                      <i class="el-icon-chat-square"></i>
+                      <input
+                        id="sessionTitle"
+                        v-model="sessionNameEdit"
+                        @blur="cancelEditSession(key, session)"
+                        type="text"
+                        class="session_edit_input"
+                        autofocus="true"
+                      />
+                      <div class="edit_options">
+                        <button
+                          @click="saveEditSession(key, session)"
+                          class="edit_button"
+                        >
+                          <i class="el-icon-check"></i>
+                        </button>
+                        <button
+                          @click="cancelEditSession(key, session)"
+                          class="edit_button"
+                        >
+                          <i class="el-icon-close"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <a
+                      v-else
+                      @click.stop.prevent="selectSession(session)"
+                      :class="{
+                        session_selected: session.selected,
+                        session_unselected: !session.selected
+                      }"
+                      class="session_box"
+                    >
+                      <i class="el-icon-chat-dot-square"></i>
+                      <div style="margin-left: 5px" class="session_name">
+                        {{ session.name }}
+                      </div>
+                      <div v-show="session.selected" class="edit_options">
+                        <button @click="editSession(key, session)" class="edit_button">
+                          <i class="el-icon-edit-outline"></i>
+                        </button>
+                        <button
+                          @click.stop.prevent="deleteSessionById(key, session.id)"
+                          class="edit_button"
+                        >
+                          <i slot="reference" class="el-icon-delete"></i>
+                        </button>
+                      </div>
+                    </a>
+                  </template>
+                </div>
+              </div>
+
+              <div
+                v-if="sessions.length > 0"
+                @click.stop.prevent="deleteSessions()"
+                class="sessions_option"
               >
-            </div>
-          </nav>
+                清除所有对话
+              </div>
+
+              <div v-if="userInfo.nickname" class="sessions_option">
+                <span style="width: 70px">剩余次数</span>
+                <span style="width: 50px; margin-left: 5px">{{ userNums.nums }}</span>
+                <el-button
+                  v-if="userNums.show_vip > 0"
+                  @click="showAddMsg(1)"
+                  style="background-color: #4c75f6"
+                  type="primary"
+                  >获取更多
+                </el-button>
+              </div>
+
+              <div v-if="userInfo.nickname" class="session_user">
+                <div class="sessions_option">
+                  <el-avatar
+                    style="width: 30px; height: 30px"
+                    :src="userInfo.head_img"
+                  ></el-avatar>
+                  <span style="width: 80%; margin-left: 5px">{{
+                    userInfo.nickname
+                  }}</span>
+                </div>
+
+                <el-button
+                  @click="loginout"
+                  style="
+                    background-color: #4c75f6;
+                    width: 80%;
+                    margin-left: 10px;
+                    margin-right: 10px;
+                    margin-top: 10;
+                  "
+                  type="primary"
+                  >退出登录</el-button
+                >
+              </div>
+              <div v-else class="sessions_option">
+                <el-button @click="login" style="background-color: #4c75f6" type="info"
+                  >登录</el-button
+                >
+              </div>
+            </nav>
+          </div>
         </div>
       </div>
     </div>
@@ -1145,8 +1186,13 @@ body {
   width: 100%;
 }
 
-#app {
+.main_content {
   height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  justify-content: space-between;
 }
 
 .scroll {
@@ -1211,8 +1257,8 @@ body {
   position: relative;
   height: 100%;
   width: 100%;
-  transition-duration: 0.15s;
-  transition-property: width;
+  // transition-duration: 0.15s;
+  // transition-property: width;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -1220,6 +1266,7 @@ body {
   align-items: stretch;
   flex: 1 1 0%;
   background: hsla(0, 0%, 100%, 0.86);
+  box-sizing: border-box;
 }
 
 .div_flex {
@@ -1746,8 +1793,10 @@ body {
   display: flex;
   padding-bottom: 0.75rem;
   padding-top: 0.75rem;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  padding-left: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  width: 80%;
   align-items: center;
   gap: 0.75rem;
   border-radius: 0.375rem;
@@ -1763,6 +1812,13 @@ body {
 
 .sessions_option:hover {
   background-color: hsla(240, 9%, 59%, 0.1);
+}
+
+.session_user {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  justify-content: space-between;
 }
 
 .login_img {
@@ -1861,7 +1917,7 @@ body {
   bottom: 0;
   top: 0;
   display: flex;
-  width: 260px;
+  width: 250px;
   flex-direction: column;
 }
 
@@ -1903,6 +1959,7 @@ body {
   overflow-y: auto;
   border-color: hsla(0, 0%, 100%, 0.2);
   border-bottom-width: 1px;
+  width: 80%;
 }
 
 .menu_sessions {
