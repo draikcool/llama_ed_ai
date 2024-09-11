@@ -41,9 +41,9 @@
 <script lang="ts">
 import { defineComponent, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { routerPath } from '@/router/index'
-import request from '@/utils/request/request'
-import { UserData } from '@/types/user'
+import { routerPath } from '../router/index'
+import request from '../utils/request/request'
+import { UserData } from '../types/user'
 import {
   ElForm,
   ElFormItem,

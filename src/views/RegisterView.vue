@@ -79,10 +79,11 @@ import {
   FormRules,
   FormInstance
 } from 'element-plus'
-import request from '@/utils/request/request'
+// import request from '@/utils/request/request'
+import request from '../utils/request/request'
 import { useRouter } from 'vue-router'
-import { routerPath } from '@/router/index'
-import { UserData } from '@/types/user'
+import { routerPath } from '../router/index'
+import { UserData } from '../types/user'
 
 interface RegisterForm {
   username: string
@@ -125,7 +126,7 @@ export default defineComponent({
       channel_id: '2'
     })
 
-    const confirmPasswordValidator = (rule, value, callback) => {
+    const confirmPasswordValidator = (_rule, value, callback) => {
       if (value !== registerForm.password) {
         callback(new Error('两次输入的密码不一致'))
       } else {
@@ -133,7 +134,7 @@ export default defineComponent({
       }
     }
 
-    const phoneNumberValidator = (rule, value, callback) => {
+    const phoneNumberValidator = (_rule, value, callback) => {
       const regex = /^1[3-9]\d{9}$/ // 中国手机号码正则表达式
       if (regex.test(value)) {
         callback()

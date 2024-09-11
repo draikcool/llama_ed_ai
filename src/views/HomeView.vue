@@ -516,13 +516,13 @@ import { defineComponent, reactive } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
-import request from '@/utils/request/request'
-import { openNewTab, routerPath } from '@/router'
+import request from '../utils/request/request'
+import { openNewTab, routerPath } from '../router'
 import {
   initWebSocket,
   sendWebsocket,
   closeWebsocket
-} from '@/utils/websocket/websocket'
+} from '../utils/websocket/websocket'
 
 const renderer = {
   code(code, infostring) {

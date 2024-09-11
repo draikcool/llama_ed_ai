@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import dts from 'vite-plugin-dts'
 
 import path from 'path'
 
 export default defineConfig({
   envPrefix: 'VUE_APP_',
-  plugins: [vue()],
+  plugins: [
+    vue()
+    // dts({
+    //   tsconfigPath: path.resolve(__dirname, 'tsconfig.build.json')
+    // })
+  ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
+      '@/': path.resolve(__dirname, 'src') // 设置 `@` 指向 `src` 目录
     }
   },
 
