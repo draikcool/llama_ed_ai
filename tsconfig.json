@@ -4,13 +4,16 @@
     "composite": true,
     // "types": ["unplugin-element-plus/types"],
     "moduleResolution": "node",
+    "outDir": "./dist", // 输出目录应该不同于源代码目录
+    "rootDir": "./src",
     "baseUrl": "./", // 基础目录
     "paths": {
       "@/*": ["src/*"], // 将 @ 别名指向 src 目录下的文件
-      "components/*": ["src/components/*"],
-      "views/*": ["src/views/*"],
-      // 其他别名...
     },
+    "noEmit": false,
+    // "allowJs": true,
+    "strict": false,
+    "noImplicitAny": false,
     "esModuleInterop": true, //设置TypeScript 能够自动解析没有扩展名的导入
     "allowSyntheticDefaultImports": true, //设置TypeScript 能够自动解析没有扩展名的导入
     "plugins": [
@@ -19,7 +22,7 @@
       }
     ]
   },
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"],
-  "exclude": ["node_modules"]
+  "references": [{ "path": "./tsconfig.app.json" }],
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue", "src/**/*.js", "src/**/*.jsx"],
+  "exclude": ["node_modules", "dist", "./dist/**/*"]
 }

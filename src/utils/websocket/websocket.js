@@ -85,7 +85,7 @@ function socketOnError() {
     };
 }
 
-function socketOnMessage(that) {
+function socketOnMessage() {
     socket.onmessage = (e) => {
         global_callback(e.data);
     };

@@ -3,7 +3,6 @@
     <el-card class="login-card">
       <h2 class="login-title">登录</h2>
       <el-form
-        ref="ruleFormRef"
         :rules="rules"
         :model="loginForm"
         label-width="auto"
@@ -40,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, ref } from 'vue'
+import { defineComponent, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { routerPath } from '@/router/index'
 import request from '@/utils/request/request'
@@ -52,7 +51,6 @@ import {
   ElButton,
   ElCard,
   FormRules,
-  FormInstance,
   ElMessage
 } from 'element-plus'
 
@@ -78,7 +76,7 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter()
-    const ruleFormRef = ref<FormInstance>()
+
     const loginForm = reactive<LoginFrom>({
       username: '',
       password: ''

@@ -8,7 +8,7 @@
               <div class="div_center">
                 <div class="chat_list">
                   <div></div>
-                  <template v-for="(v, key) in session">
+                  <template v-for="(v, key) in session" v-bind:key>
                     <div
                       v-if="v.anwser"
                       class="anwser"
@@ -114,6 +114,7 @@
                   >
                     <div
                       v-for="(cate, cateIndex) in assistantList"
+                      :key="cateIndex"
                       class="welcome_list"
                     >
                       <div class="welcome_content">
@@ -123,6 +124,7 @@
                         <div class="welcome_card">
                           <div
                             v-for="(assistant, assistantIndex) in cate.children"
+                            :key="assistantIndex"
                             class="welcome_card_item"
                             style="display: flex; margin-right: 10px"
                             @click="assistantClick(assistant.id)"
@@ -180,7 +182,11 @@
                     </div>
                   </div>
 
-                  <div v-for="(cate, cateIndex) in assistantList" class="welcome_list">
+                  <div
+                    v-for="(cate, cateIndex) in assistantList"
+                    class="welcome_list"
+                    :key="cateIndex"
+                  >
                     <div class="welcome_content">
                       <div class="welcome_title">
                         <div class="welcome_label">{{ cate.label }}</div>
@@ -188,6 +194,7 @@
                       <div class="welcome_card">
                         <div
                           v-for="(assistant, assistantIndex) in cate.children"
+                          :key="assistantIndex"
                           class="welcome_card_item"
                           style="display: flex; margin-right: 10px"
                           @click="assistantClick(assistant.id)"
@@ -246,7 +253,7 @@
                   停止输出
                 </el-button>
               </div>
-              <div v-for="(input, key) in inputItem">
+              <div v-for="(input, key) in inputItem" :key="key">
                 <div
                   v-if="input.type == 'input'"
                   style="width: 60%; float: left; margin: 0 2% 10px 0; display: flex"
@@ -264,7 +271,7 @@
                       rows="1"
                       :maxlength="20"
                       :disabled="creating"
-                      @keydown.enter.native.prevent=""
+                      @keydown.enter.prevent=""
                     ></el-input>
                   </div>
                 </div>
@@ -283,14 +290,14 @@
                       v-model.number="input.val"
                       rows="1"
                       :disabled="creating"
-                      @keydown.enter.native.prevent=""
+                      @keydown.enter.prevent=""
                       @input="inputNum(inputItem, key)"
                     ></el-input>
                   </div>
                 </div>
               </div>
 
-              <div v-for="(input, key) in inputItem">
+              <div v-for="(input, key) in inputItem" :key="key">
                 <div
                   v-if="input.type == 'textarea'"
                   class="session_input"
@@ -308,7 +315,7 @@
                       :autosize="{ minRows: 2, maxRows: 10 }"
                       rows="2"
                       :maxlength="400"
-                      @keydown.enter.native.prevent="inputEnter"
+                      @keydown.enter.prevent="inputEnter"
                       :disabled="creating"
                       @input="inputChangeEnter(inputItem, key)"
                     ></el-input>
@@ -371,7 +378,7 @@
                 style="padding-bottom: 5px; margin-left: 10px; margin-right: 10px"
               >
                 <div class="menu_sessions">
-                  <template v-for="(session, key) in sessions">
+                  <template v-for="(session, key) in sessions" :key="key">
                     <div v-if="session.editing" class="session_edit_list">
                       <i class="el-icon-chat-square"></i>
                       <input
@@ -415,12 +422,12 @@
                         <button @click="editSession(key, session)" class="edit_button">
                           <i class="el-icon-edit-outline"></i>
                         </button>
-                        <button
-                          @click.stop.prevent="deleteSessionById(key, session.id)"
+                        <el-button
                           class="edit_button"
+                          @click="deleteSessionById(key, session.id)"
                         >
-                          <i slot="reference" class="el-icon-delete"></i>
-                        </button>
+                          <el-icon-delete />
+                        </el-button>
                       </div>
                     </a>
                   </template>
@@ -505,12 +512,17 @@ import {
   ElSwitch,
   ElTooltip
 } from 'element-plus'
-import { defineComponent, ref, reactive, onMounted } from 'vue'
+import { defineComponent, reactive } from 'vue'
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/github.css'
 import request from '@/utils/request/request'
 import { openNewTab, routerPath } from '@/router'
+import {
+  initWebSocket,
+  sendWebsocket,
+  closeWebsocket
+} from '@/utils/websocket/websocket'
 
 const renderer = {
   code(code, infostring) {
@@ -583,34 +595,32 @@ export default defineComponent({
     },
 
     getSession() {
-      var that = this
       request({
         url: '/api/Chat/getSession',
         data: {},
         method: 'get'
       }).then((res) => {
         if (res.code == 0) {
-          that.sessions = res.data
+          this.sessions = res.data
         }
 
         if (res.code == 1003) {
-          that.login()
+          this.login()
         }
       })
     },
 
     getVipInfo() {
-      var that = this
       request({
         url: 'api/user/getVipInfo',
         data: {},
         method: 'post'
       }).then((res) => {
         if (res.code == 0) {
-          that.userNums = res.data
+          this.userNums = res.data
         }
         if (res.code == 1003) {
-          that.login()
+          this.login()
         }
       })
     },
@@ -637,7 +647,6 @@ export default defineComponent({
       if (this.checkCreating()) {
         return
       }
-      var that = this
       if (this.selectedSession) {
         if (this.selectedSession.id == session.id) {
           return
@@ -653,20 +662,20 @@ export default defineComponent({
         method: 'get'
       }).then((res) => {
         if (res.code == 0) {
-          that.inputItem = res.data.keywords
-          that.assistant_img = res.data.icon
-          that.assistant_desc = res.data.desc
-          that.assistant_name = res.data.name
-          that.streamShow = res.data.stream.show
+          this.inputItem = res.data.keywords
+          this.assistant_img = res.data.icon
+          this.assistant_desc = res.data.desc
+          this.assistant_name = res.data.name
+          this.streamShow = res.data.stream.show
           var stream = localStorage.getItem('stream')
           if (stream == 2) {
-            that.streamDefault = true
+            this.streamDefault = true
           } else if (stream == 1) {
-            that.streamDefault = false
+            this.streamDefault = false
           } else {
-            that.streamDefault = res.data.stream.default
+            this.streamDefault = res.data.stream.default
           }
-          that.streamChange(that.streamDefault)
+          this.streamChange(this.streamDefault)
         }
 
         request({
@@ -675,30 +684,30 @@ export default defineComponent({
           method: 'get'
         }).then((res) => {
           if (res.code == 1003) {
-            that.login()
+            this.login()
             return
           }
           if (res.code == 0) {
-            that.session = res.data
+            this.session = res.data
 
             var html =
               '<p style="font-size: 22px; font-weight: 500; color: black;">欢迎使用' +
               this.title +
               '</p><p style="font-size: 14px; margin-top: 10px;">当前选择的创作模版为：' +
-              that.assistant_name +
+              this.assistant_name +
               '</p><p style="font-size: 12px; margin-top: 10px;color:#8e8ea0;">' +
-              that.assistant_desc +
+              this.assistant_desc +
               '</p>'
 
-            that.session.push({
+            this.session.push({
               anwser: html
             })
             setTimeout(() => {
-              that.handleScrollBottom()
+              this.handleScrollBottom()
             }, 300)
           } else {
             var msg = res.message ? res.message : '未知错误，请稍后重试！'
-            that.$message.error(msg)
+            this.$message.error(msg)
           }
         })
       })
@@ -746,8 +755,6 @@ export default defineComponent({
         post.stream = this.stream
       }
 
-      var that = this
-
       request({
         url: '/api/chat/create',
         data: post,
@@ -755,19 +762,19 @@ export default defineComponent({
       }).then((res) => {
         if (res.code == 1003) {
           this.login()
-          that.creating = false
-          that.session.splice(0, 1)
+          this.creating = false
+          this.session.splice(0, 1)
           return
         }
         if (res.code == 2009) {
-          that.showAddMsg()
-          that.creating = false
-          that.session.splice(0, 1)
+          this.showAddMsg()
+          this.creating = false
+          this.session.splice(0, 1)
           return
         }
 
         if (res.code == 0 && res.data.chat_id) {
-          if (that.stream == 1) {
+          if (this.stream == 1) {
             request({
               url: '/api/chat/getChat',
               data: {
@@ -776,49 +783,49 @@ export default defineComponent({
               method: 'post'
             }).then((result) => {
               if (result.code == 0 && result.data.msg) {
-                that.session[0].anwser = result.data.msg
-                that.session[0].id = res.data.chat_id
-                that.creating = false
-                that.handleScrollBottom()
-                if (that.userNums.nums != 0) {
-                  that.userNums.nums -= 1
+                this.session[0].anwser = result.data.msg
+                this.session[0].id = res.data.chat_id
+                this.creating = false
+                this.handleScrollBottom()
+                if (this.userNums.nums != 0) {
+                  this.userNums.nums -= 1
                 }
               } else {
-                that.$message.error(' 生成失败，请稍后重试！')
-                that.creating = false
-                that.session.splice(0, 1)
+                this.$message.error(' 生成失败，请稍后重试！')
+                this.creating = false
+                this.session.splice(0, 1)
               }
             })
           }
 
-          if (that.stream == 2) {
-            var socket = initWebSocket(that)
+          if (this.stream == 2) {
+            initWebSocket(this)
             var post = {}
             post.chatId = res.data.chat_id
-            if (that.userNums.nums != 0) {
-              that.userNums.nums -= 1
+            if (this.userNums.nums != 0) {
+              this.userNums.nums -= 1
             }
             sendWebsocket(post, function (e) {
               var json = JSON.parse(e)
 
               if (json.code != 0) {
                 var msg = json.message ? json.message : '未知错误,请重试'
-                that.$message.error(msg)
-                that.creating = false
-                that.session.splice(0, 1)
+                this.$message.error(msg)
+                this.creating = false
+                this.session.splice(0, 1)
                 return
               }
-              that.session[0].anwser = json.data
-              that.session[0].id = res.data.chat_id
-              that.creating = true
-              that.handleScrollBottom()
+              this.session[0].anwser = json.data
+              this.session[0].id = res.data.chat_id
+              this.creating = true
+              this.handleScrollBottom()
             })
           }
         } else {
           var msg = res.message ? res.message : '未知错误'
-          that.$message.error(msg)
-          that.creating = false
-          that.session.splice(0, 1)
+          this.$message.error(msg)
+          this.creating = false
+          this.session.splice(0, 1)
         }
       })
     },
@@ -832,7 +839,6 @@ export default defineComponent({
       if (this.checkCreating()) {
         return
       }
-      var that = this
       var newSession = {
         assistant_id: id,
         desc: '',
@@ -855,11 +861,11 @@ export default defineComponent({
         if (result.code == 0 && result.data) {
           newSession.id = result.data.id
           newSession.name = result.data.assistant
-          that.sessions.unshift(newSession)
-          that.selectSession(newSession)
+          this.sessions.unshift(newSession)
+          this.selectSession(newSession)
         } else {
-          var msg = res.message ? res.message : '未知错误，请稍后重试！'
-          that.$message.error(msg)
+          var msg = result.message ? result.message : '未知错误，请稍后重试！'
+          this.$message.error(msg)
         }
       })
     },
@@ -907,7 +913,6 @@ export default defineComponent({
     },
 
     saveEditSession(key, session) {
-      var that = this
       session.editing = false
       if (session.name == this.sessionNameEdit) {
         return
@@ -926,14 +931,14 @@ export default defineComponent({
         }
         if (result.code == 0) {
           session.name = result.data.title
-          that.$set(this.sessions, key, session)
-          that.$message({
+          this.$set(this.sessions, key, session)
+          this.$message({
             message: '修改成功',
             type: 'success'
           })
         } else {
-          that.$message.error('修改失败')
-          that.$set(this.sessions, key, session)
+          this.$message.error('修改失败')
+          this.$set(this.sessions, key, session)
         }
       })
     },
@@ -942,7 +947,6 @@ export default defineComponent({
       if (this.checkCreating()) {
         return
       }
-      var that = this
       request({
         url: '/api/chat/deleteSession',
         data: {
@@ -955,18 +959,18 @@ export default defineComponent({
           return
         }
         if (result.code == 0) {
-          that.session = []
+          this.session = []
           if (id) {
-            that.sessions.splice(key, 1)
+            this.sessions.splice(key, 1)
           } else {
-            that.sessions = []
+            this.sessions = []
           }
-          that.$message({
+          this.$message({
             message: '删除成功',
             type: 'success'
           })
         } else {
-          that.$message.error('删除失败')
+          this.$message.error('删除失败')
         }
       })
     },
@@ -1005,10 +1009,10 @@ export default defineComponent({
 
     copy(msg) {
       this.$copyText(msg)
-        .then((res) => {
+        .then(() => {
           this.$message.success('复制成功!')
         })
-        .catch((err) => {
+        .catch(() => {
           this.$message.error('该浏览器不支持自动复制, 请手动复制')
         })
     },
@@ -1053,7 +1057,6 @@ export default defineComponent({
     },
 
     chatRate(rate, id) {
-      var that = this
       request({
         url: '/api/chat/score',
         data: {
@@ -1073,7 +1076,6 @@ export default defineComponent({
       if (userInfo) {
         this.userInfo = JSON.parse(userInfo).userInfo
       }
-      var that = this
       request({
         url: '/api/index/getInfo',
         data: {},
@@ -1114,7 +1116,7 @@ export default defineComponent({
       if (type == 1) {
         this.addMsg = '获取更多生成次数'
       }
-      var that = this
+
       request({
         url: '/api/user/getQrCode',
         data: {
@@ -1122,8 +1124,8 @@ export default defineComponent({
         },
         method: 'post'
       }).then((result) => {
-        that.addImg = result.data.img
-        that.addNum = true
+        this.addImg = result.data.img
+        this.addNum = true
       })
     },
 
@@ -1143,7 +1145,6 @@ export default defineComponent({
 
   data() {
     const countReactive = reactive({ num: 0 })
-    const userInfo = reactive([])
 
     return {
       countReactive,

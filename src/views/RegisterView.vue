@@ -93,7 +93,7 @@ interface RegisterForm {
   major: string
   phone: string
   email: string
-  channel_id: String
+  channel_id: string
 }
 
 interface RegisterResponse {
@@ -178,7 +178,7 @@ export default defineComponent({
 
     const handleRegister = async (formEl: FormInstance | undefined) => {
       if (!formEl) return
-      await formEl.validate((isValid, invalidFields) => {
+      await formEl.validate((isValid) => {
         if (isValid) {
           httpUserRegister()
         } else {

@@ -13,10 +13,10 @@ const axios: AxiosInstance = Axios.create({
 })
 
 function requestEncrypt(data: { [x: string]: string }) {
-  let secret = import.meta.env.VUE_APP_SECRET
+  const secret = import.meta.env.VUE_APP_SECRET
 
   let _str = ''
-  let keys = Object.keys(data)
+  const keys = Object.keys(data)
   keys.sort()
   keys.forEach((key) => {
     _str += key + data[key]
@@ -24,17 +24,15 @@ function requestEncrypt(data: { [x: string]: string }) {
   _str = secret + _str + secret
   return md5.hex_md5_32Upper(_str)
 }
-interface UserInfo {
-  token: string
-}
-export default function request(options: AxiosRequestConfig<any>) {
+
+export default function request(options: AxiosRequestConfig) {
   options.data.timestamp = new Date().valueOf()
   options.data.app_key = import.meta.env.VUE_APP_KEY
   options.data.sign = requestEncrypt(options.data)
 
   if (options.method == 'get') {
-    var params = ''
-    var keys = Object.keys(options.data)
+    let params = ''
+    const keys = Object.keys(options.data)
     keys.forEach((key) => {
       params += key + '=' + options.data[key] + '&'
     })

@@ -100,7 +100,7 @@ function hex_md5(string,bit) {
         }
         return utftext;
     };
-    var x = Array();
+    var x = [];
     var k, AA, BB, CC, DD, a, b, c, d;
     var S11 = 7, S12 = 12, S13 = 17, S14 = 22;
     var S21 = 5, S22 = 9, S23 = 14, S24 = 20;
